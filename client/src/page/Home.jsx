@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { usGlobalContent } from '../context';
+import { usGlobalContext } from '../context';
 import { PageHOC, CustomInput, CustomButton } from '../components';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 const Home = () => {
-  const { contract, walletAddress, setShowAlert } = usGlobalContent();
+  const { contract, walletAddress, setShowAlert } = usGlobalContext();
   const [playerName, setPlayerName] = useState('');
   const navigate = useNavigate();
 
