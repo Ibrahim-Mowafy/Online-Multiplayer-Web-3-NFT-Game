@@ -1,13 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usGlobalContent } from '../context';
 import { logo, heroImg } from '../assets';
 import styles from '../styles';
+import Alert from './Alert';
 
 const PageHOC = (Component, title, description) => () => {
+  const { showAlert } = usGlobalContent();
   const navigation = useNavigate();
 
   return (
     <div className={styles.hocContainer}>
+      {showAlert?.status && (
+        <Alert type={showAlert.type} message={showAlert.message} />
+      )}
       <div className={styles.hocContentBox}>
         <img
           src={logo}
@@ -25,7 +31,11 @@ const PageHOC = (Component, title, description) => () => {
         <p className={styles.footerText}>Made with 💜 by Ibrahim Mowafy</p>
       </div>
       <div className="flex flex-1">
-        <img src={heroImg} alt="hero-img" className='w-full xl:h-full object-cover' />
+        <img
+          src={heroImg}
+          alt="hero-img"
+          className="w-full xl:h-full object-cover"
+        />
       </div>
     </div>
   );
