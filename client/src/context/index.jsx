@@ -17,6 +17,13 @@ export const GlobalContextProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState('');
   const [provider, setProvider] = useState('');
   const [contract, setContract] = useState('');
+  const [battleName, setBattleName] = useState('');
+  const [updateGameData, setUpdateGameData] = useState(0);
+  const [gameData, setGameData] = useState({
+    players: [],
+    pendingBattles: [],
+    activeBattle: null,
+  });
   const [showAlert, setShowAlert] = useState({
     status: false,
     type: 'info',
@@ -60,6 +67,7 @@ export const GlobalContextProvider = ({ children }) => {
         provider,
         walletAddress,
         setShowAlert,
+        setUpdateGameData,
       });
     }
   }, [contract]);
@@ -73,13 +81,46 @@ export const GlobalContextProvider = ({ children }) => {
     }
   }, [showAlert]);
 
+  //* Set the game data to the state
+  useEffect(() => {
+    const fetchGameData = async () => {
+      const fetchedBattles = await contract.getAllBattles();
+      const pendingBattles = fetchedBattles.filter(
+        (battle) => battle.battleStatus === 0
+      );
+      let activeBattle = null;
+
+      fetchedBattles.forEach((battle) => {
+        if (
+          battle.players.find(
+            (player) => player.toLowerCase() === walletAddress.toLowerCase()
+          )
+        ) {
+          if (battle.winner.startsWith('0x00')) {
+            activeBattle = battle;
+          }
+        }
+      });
+      setGameData({ pendingBattles: pendingBattles.slice(1), activeBattle });
+    };
+    if (contract) fetchGameData();
+  }, [contract,updateGameData]);
+
   return (
     <GlobalContext.Provider
-      value={{ contract, walletAddress, showAlert, setShowAlert }}
+      value={{
+        contract,
+        walletAddress,
+        showAlert,
+        setShowAlert,
+        battleName,
+        setBattleName,
+        gameData,
+      }}
     >
       {children}
     </GlobalContext.Provider>
   );
 };
 
-export const usGlobalContent = () => useContext(GlobalContext);
+export const usGlobalContext = () => useContext(GlobalContext);
