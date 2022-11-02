@@ -19,6 +19,7 @@ export const GlobalContextProvider = ({ children }) => {
   const [contract, setContract] = useState('');
   const [battleName, setBattleName] = useState('');
   const [updateGameData, setUpdateGameData] = useState(0);
+  const [battleground, setBattleground] = useState('bg-astral');
   const [gameData, setGameData] = useState({
     players: [],
     pendingBattles: [],
@@ -104,7 +105,7 @@ export const GlobalContextProvider = ({ children }) => {
       setGameData({ pendingBattles: pendingBattles.slice(1), activeBattle });
     };
     if (contract) fetchGameData();
-  }, [contract,updateGameData]);
+  }, [contract, updateGameData]);
 
   return (
     <GlobalContext.Provider
@@ -116,6 +117,8 @@ export const GlobalContextProvider = ({ children }) => {
         battleName,
         setBattleName,
         gameData,
+        battleground,
+        setBattleground,
       }}
     >
       {children}
