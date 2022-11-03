@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from '../styles';
 import { Alert, ActionButton, Card, GameInfo, PlayerInfo } from '../components';
-import { usGlobalContext } from '../context';
+import { useGlobalContext } from '../context';
 import {
   attack,
   attackSound,
@@ -21,7 +21,7 @@ const Battle = () => {
     showAlert,
     setShowAlert,
     battleground,
-  } = usGlobalContext();
+  } = useGlobalContext();
   const [player1, setPlayer1] = useState({});
   const [player2, setPlayer2] = useState({});
   const { battleName } = useParams();

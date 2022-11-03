@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { usGlobalContext } from '../context';
+import { useGlobalContext } from '../context';
 import { PageHOC, CustomInput, CustomButton } from '../components';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 const Home = () => {
-  const { contract, walletAddress, setShowAlert } = usGlobalContext();
+  const { contract, walletAddress, setShowAlert } = useGlobalContext();
   const [playerName, setPlayerName] = useState('');
   const navigate = useNavigate();
 
@@ -20,6 +20,7 @@ const Home = () => {
         });
       }
     } catch (error) {
+      console.log(error);
       setShowAlert({
         status: true,
         type: 'failure',

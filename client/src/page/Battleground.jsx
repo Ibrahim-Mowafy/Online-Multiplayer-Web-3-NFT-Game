@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../styles';
 import { Alert } from '../components';
 import { battlegrounds } from '../assets';
-import { usGlobalContext } from '../context';
+import { useGlobalContext } from '../context';
 
 const Battleground = () => {
   const navigate = useNavigate();
-  const { setBattleground, setShowAlert, showAlert } = usGlobalContext();
+  const { setBattleground, setShowAlert, showAlert } = useGlobalContext();
 
   const handleBattleChoice = (ground) => {
     setBattleground(ground.id);

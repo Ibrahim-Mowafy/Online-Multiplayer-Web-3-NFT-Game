@@ -126,4 +126,4 @@ export const GlobalContextProvider = ({ children }) => {
   );
 };
 
-export const usGlobalContext = () => useContext(GlobalContext);
+export const useGlobalContext = () => useContext(GlobalContext);

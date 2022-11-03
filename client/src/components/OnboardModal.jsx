@@ -75,7 +75,9 @@ const OnboardModal = () => {
             </p>
             <CustomButton
               title="Grab some test tokens"
-              handleClick={() => window.open('https://faucet.avax.network/', '_blank')}
+              handleClick={() =>
+                window.open('https://faucet.avax.network/', '_blank')
+              }
             />
           </>
         );

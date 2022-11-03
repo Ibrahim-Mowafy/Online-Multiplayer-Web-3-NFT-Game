@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usGlobalContext } from '../context';
+import { useGlobalContext } from '../context';
 import { logo, heroImg } from '../assets';
 import styles from '../styles';
 import Alert from './Alert';
 
 const PageHOC = (Component, title, description) => () => {
-  const { showAlert } = usGlobalContext();
+  const { showAlert } = useGlobalContext();
   const navigation = useNavigate();
 
   return (
