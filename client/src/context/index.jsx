@@ -6,20 +6,21 @@ import React, {
   useState,
 } from 'react';
 import { ethers } from 'ethers';
-import Web3modal from 'web3modal';
+import Web3Modal from 'web3modal';
 import { useNavigate } from 'react-router-dom';
+
+import { GetParams } from '../utils/onboard.js';
 import { ABI, ADDRESS } from '../contract';
-import { createEventListener } from './createEventListener';
+import { createEventListeners } from './createEventListeners';
 
 const GlobalContext = createContext();
 
 export const GlobalContextProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState('');
-  const [provider, setProvider] = useState('');
-  const [contract, setContract] = useState('');
-  const [battleName, setBattleName] = useState('');
-  const [updateGameData, setUpdateGameData] = useState(0);
-  const [battleground, setBattleground] = useState('bg-astral');
+  const [battleGround, setBattleGround] = useState('bg-astral');
+  const [contract, setContract] = useState(null);
+  const [provider, setProvider] = useState(null);
+  const [step, setStep] = useState(1);
   const [gameData, setGameData] = useState({
     players: [],
     pendingBattles: [],
@@ -30,95 +31,162 @@ export const GlobalContextProvider = ({ children }) => {
     type: 'info',
     message: '',
   });
+  const [battleName, setBattleName] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [updateGameData, setUpdateGameData] = useState(0);
+
+  const player1Ref = useRef();
+  const player2Ref = useRef();
+
   const navigate = useNavigate();
+
+  //* Set battleground to local storage
+  useEffect(() => {
+    const isBattleground = localStorage.getItem('battleground');
+
+    if (isBattleground) {
+      setBattleGround(isBattleground);
+    } else {
+      localStorage.setItem('battleground', battleGround);
+    }
+  }, []);
+
+  //* Reset web3 onboarding modal params
+  useEffect(() => {
+    const resetParams = async () => {
+      const currentStep = await GetParams();
+
+      setStep(currentStep.step);
+    };
+
+    resetParams();
+
+    window?.ethereum?.on('chainChanged', () => resetParams());
+    window?.ethereum?.on('accountsChanged', () => resetParams());
+  }, []);
 
   //* Set the wallet address to the state
   const updateCurrentWalletAddress = async () => {
-    const accounts = await window.ethereum.request({
+    const accounts = await window?.ethereum?.request({
       method: 'eth_requestAccounts',
     });
+
     if (accounts) setWalletAddress(accounts[0]);
   };
 
   useEffect(() => {
     updateCurrentWalletAddress();
-    window.ethereum.on('accountsChanged', updateCurrentWalletAddress);
+
+    window?.ethereum?.on('accountsChanged', updateCurrentWalletAddress);
   }, []);
 
-  //* Set the smart contract the provider to the state
+  //* Set the smart contract and provider to the state
   useEffect(() => {
     const setSmartContractAndProvider = async () => {
-      const web3Modal = new Web3modal();
+      const web3Modal = new Web3Modal();
       const connection = await web3Modal.connect();
       const newProvider = new ethers.providers.Web3Provider(connection);
       const signer = newProvider.getSigner();
       const newContract = new ethers.Contract(ADDRESS, ABI, signer);
 
-      setContract(newContract);
       setProvider(newProvider);
+      setContract(newContract);
     };
-    setSmartContractAndProvider();
+
+    const timer = setTimeout(() => setSmartContractAndProvider(), [1000]);
+    return () => clearTimeout(timer);
   }, []);
 
+  //* Activate event listeners for the smart contract
   useEffect(() => {
-    if (contract) {
-      createEventListener({
+    if (step === -1 && contract) {
+      createEventListeners({
         navigate,
         contract,
         provider,
         walletAddress,
         setShowAlert,
+        player1Ref,
+        player2Ref,
         setUpdateGameData,
       });
     }
-  }, [contract]);
-
-  useEffect(() => {
-    if (showAlert?.status) {
-      const timer = setTimeout(() => {
-        setShowAlert({ status: false, type: 'info', message: '' });
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showAlert]);
+  }, [step]);
 
   //* Set the game data to the state
   useEffect(() => {
     const fetchGameData = async () => {
-      const fetchedBattles = await contract.getAllBattles();
-      const pendingBattles = fetchedBattles.filter(
-        (battle) => battle.battleStatus === 0
-      );
-      let activeBattle = null;
+      if (contract) {
+        const fetchedBattles = await contract.getAllBattles();
+        const pendingBattles = fetchedBattles.filter(
+          (battle) => battle.battleStatus === 0
+        );
+        let activeBattle = null;
 
-      fetchedBattles.forEach((battle) => {
-        if (
-          battle.players.find(
-            (player) => player.toLowerCase() === walletAddress.toLowerCase()
-          )
-        ) {
-          if (battle.winner.startsWith('0x00')) {
-            activeBattle = battle;
+        fetchedBattles.forEach((battle) => {
+          if (
+            battle.players.find(
+              (player) => player.toLowerCase() === walletAddress.toLowerCase()
+            )
+          ) {
+            if (battle.winner.startsWith('0x00')) {
+              activeBattle = battle;
+            }
           }
-        }
-      });
-      setGameData({ pendingBattles: pendingBattles.slice(1), activeBattle });
+        });
+
+        setGameData({ pendingBattles: pendingBattles.slice(1), activeBattle });
+      }
     };
-    if (contract) fetchGameData();
+
+    fetchGameData();
   }, [contract, updateGameData]);
+
+  //* Handle alerts
+  useEffect(() => {
+    if (showAlert?.status) {
+      const timer = setTimeout(() => {
+        setShowAlert({ status: false, type: 'info', message: '' });
+      }, [5000]);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showAlert]);
+
+  //* Handle error messages
+  useEffect(() => {
+    if (errorMessage) {
+      const parsedErrorMessage = errorMessage?.reason
+        ?.slice('execution reverted: '.length)
+        .slice(0, -1);
+
+      if (parsedErrorMessage) {
+        setShowAlert({
+          status: true,
+          type: 'failure',
+          message: parsedErrorMessage,
+        });
+      }
+    }
+  }, [errorMessage]);
 
   return (
     <GlobalContext.Provider
       value={{
+        player1Ref,
+        player2Ref,
+        battleGround,
+        setBattleGround,
         contract,
+        gameData,
         walletAddress,
+        updateCurrentWalletAddress,
         showAlert,
         setShowAlert,
         battleName,
         setBattleName,
-        gameData,
-        battleground,
-        setBattleground,
+        errorMessage,
+        setErrorMessage,
       }}
     >
       {children}

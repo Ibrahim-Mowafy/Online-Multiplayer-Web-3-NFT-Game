@@ -8,18 +8,14 @@ import { useGlobalContext } from '../context';
 
 const Battleground = () => {
   const navigate = useNavigate();
-  const { setBattleground, setShowAlert, showAlert } = useGlobalContext();
+  const { setBattleGround, setShowAlert, showAlert } = useGlobalContext();
 
   const handleBattleChoice = (ground) => {
-    setBattleground(ground.id);
+    setBattleGround(ground.id);
 
     localStorage.setItem('battleground', ground.id);
 
-    setShowAlert({
-      status: true,
-      type: 'info',
-      message: `${ground.name} is battle ready!`,
-    });
+    setShowAlert({ status: true, type: 'info', message: `${ground.name} is battle ready!` });
 
     setTimeout(() => {
       navigate(-1);
@@ -28,9 +24,7 @@ const Battleground = () => {
 
   return (
     <div className={`${styles.flexCenter} ${styles.battlegroundContainer}`}>
-      {showAlert.status && (
-        <Alert type={showAlert.type} message={showAlert.message} />
-      )}
+      {showAlert.status && <Alert type={showAlert.type} message={showAlert.message} />}
 
       <h1 className={`${styles.headText} text-center`}>
         Choose your
@@ -45,11 +39,7 @@ const Battleground = () => {
             className={`${styles.flexCenter} ${styles.battleGroundCard}`}
             onClick={() => handleBattleChoice(ground)}
           >
-            <img
-              src={ground.image}
-              alt="saiman"
-              className={styles.battleGroundCardImg}
-            />
+            <img src={ground.image} alt="saiman" className={styles.battleGroundCardImg} />
 
             <div className="info absolute">
               <p className={styles.battleGroundCardText}>{ground.name}</p>

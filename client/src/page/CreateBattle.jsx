@@ -1,38 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import styles from '../styles';
 import { useGlobalContext } from '../context';
-import { CustomButton, CustomInput, PageHOC, GameLoad } from '../components';
+import { CustomButton, CustomInput, GameLoad, PageHOC } from '../components';
+
 const CreateBattle = () => {
-  const navigate = useNavigate();
-  const { contract, battleName, setBattleName, gameData } = useGlobalContext();
+  const { contract, gameData, battleName, setBattleName, setErrorMessage } = useGlobalContext();
   const [waitBattle, setWaitBattle] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (gameData?.activeBattle?.battleStatus === 0) {
+    if (gameData?.activeBattle?.battleStatus === 1) {
+      navigate(`/battle/${gameData.activeBattle.name}`);
+    } else if (gameData?.activeBattle?.battleStatus === 0) {
       setWaitBattle(true);
     }
   }, [gameData]);
 
   const handleClick = async () => {
-    if (!battleName || !battleName.trim()) return null;
+    if (battleName === '' || battleName.trim() === '') return null;
+
     try {
       await contract.createBattle(battleName);
+
       setWaitBattle(true);
     } catch (error) {
-      console.log(error);
+      setErrorMessage(error);
     }
   };
+
   return (
     <>
       {waitBattle && <GameLoad />}
+
       <div className="flex flex-col mb-5">
         <CustomInput
           label="Battle"
-          placeholder="Enter battle name"
+          placeHolder="Enter battle name"
           value={battleName}
           handleValueChange={setBattleName}
         />
+
         <CustomButton
           title="Create Battle"
           handleClick={handleClick}
@@ -48,8 +57,6 @@ const CreateBattle = () => {
 
 export default PageHOC(
   CreateBattle,
-  <>
-    Create <br />a new Battle
-  </>,
-  <>Create your own battle and wait for other players to join you</>
+  <>Create <br /> a new Battle</>,
+  <>Create your own battle and wait for other players to join you</>,
 );
